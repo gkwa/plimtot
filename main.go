@@ -1,26 +1,25 @@
-package slow
+package main
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds"
-	"github.com/aws/aws-sdk-go/aws/ec2metadata"
-	"github.com/aws/aws-sdk-go/aws/session"
+  "fmt"
+  "github.com/aws/aws-sdk-go-v2/aws/external"
+  "github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
 )
 
-func getCredentialsFromRole() (*credentials.Credentials, error) {
-	roleProvider := &ec2rolecreds.EC2RoleProvider{
-		Client: ec2metadata.New(session.New()),
-	}
-	creds := credentials.NewCredentials(roleProvider)
+func main() {
+  cfg, err := external.LoadDefaultAWSConfig()
 
-	start := time.Now().UTC()
-	if _, err := creds.Get(); err != nil { // this takes 20 seconds
-		return nil, err
-	}
-	fmt.Printf("getting credentails from role took %s\n", time.Now().UTC().Sub(start))
+  if err != nil {
+    panic("Unable to load SDK config, " + err.Error())
+  }
 
-	return creds, nil
+  md_svc := ec2metadata.New(cfg)
+
+  if !md_svc.Available() {
+    panic("Metadata service cannot be reached.  Are you on an EC2/ECS/Lambda machine?")
+  }
+
+  region, err := md_svc.Region()
+
+  fmt.Println("Region is: " + region)
 }
