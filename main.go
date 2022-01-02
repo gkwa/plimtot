@@ -1,25 +1,34 @@
 package main
 
 import (
-  "fmt"
-  "github.com/aws/aws-sdk-go-v2/aws/external"
-  "github.com/aws/aws-sdk-go-v2/aws/ec2metadata"
+    "fmt"
+    "os"
+
+    "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/session"
+    "github.com/aws/aws-sdk-go/service/ec2"
 )
 
 func main() {
-  cfg, err := external.LoadDefaultAWSConfig()
+    instanceID := os.Args[1]
 
-  if err != nil {
-    panic("Unable to load SDK config, " + err.Error())
-  }
+    listInstances(instanceID)
+}
 
-  md_svc := ec2metadata.New(cfg)
+func listInstances(instanceID string) {
+    awsConnect, err := session.NewSession(&aws.Config{
+        Region: aws.String("us-east-2")},
+    )
+    if err != nil {
+        fmt.Println(err)
+    }
 
-  if !md_svc.Available() {
-    panic("Metadata service cannot be reached.  Are you on an EC2/ECS/Lambda machine?")
-  }
+    ec2sess := ec2.New(awsConnect)
 
-  region, err := md_svc.Region()
+    instanceInfo := &ec2.DescribeInstancesInput{
+        InstanceIds: []*string{aws.String(instanceID)},
+    }
+    fmt.Println("Listing EC2 Instance info...")
 
-  fmt.Println("Region is: " + region)
+    fmt.Println(ec2sess.DescribeInstances(instanceInfo))
 }
