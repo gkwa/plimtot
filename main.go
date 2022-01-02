@@ -1,7 +1,10 @@
 package main
 
 import (
+	MQTT "github.com/eclipse/paho.mqtt.golang"
+
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"io"
 	"log"
@@ -11,8 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 )
 
-// getAWSMetadataHostname returns name of the AWS host from metadata service
-func getAWSMetadataAsJson() (string, error) {
+type Stuff struct {
+	Ip         string
+	Region     string
+	InstanceId string
+}
+
+func getAWSMetadataAsJson(data *Stuff) {
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Fatal("unable to load config: %w", err)
@@ -35,7 +43,7 @@ func getAWSMetadataAsJson() (string, error) {
 	if err != nil {
 		log.Fatal("cannot read ip from the EC2 instance: %w", err)
 	}
-	log.Printf("ip: %v\n", string(ip))
+	data.Ip = string(ip)
 
 	// instance-id
 	instanceIdRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
@@ -50,39 +58,52 @@ func getAWSMetadataAsJson() (string, error) {
 	if err != nil {
 		log.Fatal("cannot read instanceId from the EC2 instance: %w", err)
 	}
-	log.Printf("id: %v\n", string(instanceId))
+	data.InstanceId = string(instanceId)
 
 	// region
 	region, err := client.GetRegion(context.TODO(), &imds.GetRegionInput{})
 	if err != nil {
 		log.Printf("Unable to retrieve the region from the EC2 instance %v\n", err)
 	}
-	log.Printf("region: %v\n", region.Region)
-
-	type Stuff struct {
-		Ip         string
-		Region     string
-		InstanceId string
-	}
-
-	myStuff := Stuff{
-		Ip:         string(ip),
-		Region:     region.Region,
-		InstanceId: string(instanceId),
-	}
-
-	b, err := json.Marshal(myStuff)
-	if err != nil {
-		log.Println("error:", err)
-	}
-
-	return string(b), nil
+	data.Region = region.Region
 }
 
 func main() {
-	js, err := getAWSMetadataAsJson()
-	if err != nil {
-		log.Fatal("cannot read instanceId from the EC2 instance: %w", err)
+	var server string
+	var username string
+	var password string
+
+	var data Stuff
+
+	server = os.Getenv("server")
+	username = os.Getenv("username")
+	password = os.Getenv("password")
+
+	opts := MQTT.NewClientOptions()
+	opts.AddBroker(server)
+	opts.SetClientID("myid")
+	opts.SetCleanSession(true)
+	opts.SetUsername(username)
+	opts.SetPassword(password)
+	opts.SetTLSConfig(&tls.Config{InsecureSkipVerify: false})
+
+	c := MQTT.NewClient(opts)
+	if token := c.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
 	}
+
+	getAWSMetadataAsJson(&data)
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		log.Println("error:", err)
+	}
+	js := string(b)
+
+	topic := "aws/ec2/server/dns/" + data.InstanceId
+
+	token := c.Publish(topic, 2, false, js)
+	token.Wait()
+	c.Disconnect(250)
 	os.Stdout.Write([]byte(js))
 }

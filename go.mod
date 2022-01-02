@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.11.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.8.2
+	github.com/eclipse/paho.mqtt.golang v1.3.5
 )
 
 require (
@@ -17,4 +18,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sso v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.12.0 // indirect
 	github.com/aws/smithy-go v1.9.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
+	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 // indirect
 )
