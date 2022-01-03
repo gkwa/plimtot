@@ -1,4 +1,4 @@
-module github.com/TaylorMonacelli/plimtot2
+module github.com/TaylorMonacelli/plimtot
 
 go 1.17
 

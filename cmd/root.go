@@ -43,7 +43,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.plimtot2.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.plimtot.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -63,9 +63,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".plimtot2" (without extension).
+		// Search config in home directory with name ".plimtot" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".plimtot2")
+		viper.SetConfigName(".plimtot")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

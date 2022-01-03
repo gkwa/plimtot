@@ -1,6 +1,6 @@
 package main
 
-import "github.com/TaylorMonacelli/plimtot2/cmd"
+import "github.com/TaylorMonacelli/plimtot/cmd"
 
 func main() {
 	cmd.Execute()
