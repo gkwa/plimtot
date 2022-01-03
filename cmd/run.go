@@ -16,6 +16,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 )
 
+type Stuff struct {
+	Ip         string
+	Region     string
+	InstanceId string
+}
+
 // runCmd represents the run command
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -31,14 +37,29 @@ to quickly create a Cobra application.`,
 		var server string
 		var username string
 		var password string
+		var data Stuff
 
-		server = os.Getenv("server")
-		username = os.Getenv("username")
-		password = os.Getenv("password")
+		server := os.Getenv("SERVER")
+		if server == "" {
+			return errors.New("missing server")
+		}
+
+		username := os.Getenv("USERNAME")
+		if username == "" {
+			return errors.New("missing username")
+		}
+
+		password := os.Getenv("PASSWORD")
+		if password == "" {
+			return errors.New("missing password")
+		}
 
 		opts := MQTT.NewClientOptions()
 		opts.AddBroker(server)
-		opts.SetClientID("myid")
+
+		getAWSMetadata(&data)
+		opts.SetClientID(data.InstanceId)
+
 		opts.SetCleanSession(true)
 		opts.SetUsername(username)
 		opts.SetPassword(password)
@@ -48,9 +69,6 @@ to quickly create a Cobra application.`,
 		if token := c.Connect(); token.Wait() && token.Error() != nil {
 			panic(token.Error())
 		}
-
-		var data Stuff
-		getAWSMetadataAsJson(&data)
 
 		b, err := json.Marshal(data)
 		if err != nil {
@@ -82,23 +100,9 @@ func init() {
 	// runCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-type Stuff struct {
-	Ip         string
-	Region     string
-	InstanceId string
-}
-
-func getAWSMetadataAsJson(data *Stuff) {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		log.Fatal("unable to load config: %w", err)
-	}
-
-	client := imds.NewFromConfig(cfg)
-
+// ip
+func getInstanceIp(client *imds.Client) (string, error) {
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
-
-	// ip
 	ipRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: "public-ipv4",
 	})
@@ -111,9 +115,23 @@ func getAWSMetadataAsJson(data *Stuff) {
 	if err != nil {
 		log.Fatal("cannot read ip from the EC2 instance: %w", err)
 	}
-	data.Ip = string(ip)
+	return string(ip), nil
+}
 
-	// instance-id
+// region
+func getInstanceRegion(client *imds.Client) (string, error) {
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
+	region, err := client.GetRegion(context.TODO(), &imds.GetRegionInput{})
+	if err != nil {
+		log.Printf("Unable to retrieve the region from the EC2 instance %v\n", err)
+	}
+	return string(region.Region), nil
+}
+
+// instance-id
+func getInstanceId(client *imds.Client) (string, error) {
+	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
+
 	instanceIdRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: "instance-id",
 	})
@@ -126,12 +144,23 @@ func getAWSMetadataAsJson(data *Stuff) {
 	if err != nil {
 		log.Fatal("cannot read instanceId from the EC2 instance: %w", err)
 	}
+	return string(instanceId), nil
+}
+
+func getAWSMetadata(data *Stuff) {
+	cfg, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Fatal("unable to load config: %w", err)
+	}
+
+	client := imds.NewFromConfig(cfg)
+
+	instanceId, _ := getInstanceId(client)
 	data.InstanceId = string(instanceId)
 
-	// region
-	region, err := client.GetRegion(context.TODO(), &imds.GetRegionInput{})
-	if err != nil {
-		log.Printf("Unable to retrieve the region from the EC2 instance %v\n", err)
-	}
-	data.Region = region.Region
+	ip, _ := getInstanceIp(client)
+	data.Ip = string(ip)
+
+	region, _ := getInstanceRegion(client)
+	data.Region = string(region)
 }
