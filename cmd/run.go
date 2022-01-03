@@ -9,11 +9,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"io"
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Stuff struct {
@@ -34,24 +35,25 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		var server string
-		var username string
-		var password string
 		var data Stuff
 
 		server := os.Getenv("SERVER")
 		if server == "" {
-			return errors.New("missing server")
+			log.WithFields(log.Fields{"animal": "walrus",}).Error("missing SERVER")
 		}
 
 		username := os.Getenv("USERNAME")
 		if username == "" {
-			return errors.New("missing username")
+			log.WithFields(log.Fields{"animal": "walrus",}).Error("missing USERNAME")
 		}
 
 		password := os.Getenv("PASSWORD")
 		if password == "" {
-			return errors.New("missing password")
+			log.WithFields(log.Fields{"animal": "walrus",}).Error("missing PASSWORD")
+		}
+
+		if server == "" || password == "" || server == "" {
+			os.Exit(1)
 		}
 
 		opts := MQTT.NewClientOptions()
