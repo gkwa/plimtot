@@ -60,7 +60,7 @@ to quickly create a Cobra application.`,
 			ctx.WithError(errors.New("missing PASSWORD")).Error("missing PASSWORD")
 		}
 
-		if server == "" || password == "" || server == "" {
+		if server == "" || username == "" || password == "" {
 			os.Exit(1)
 		}
 
