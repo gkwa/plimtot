@@ -25,6 +25,12 @@ type Stuff struct {
 	InstanceId string `json:"instance_id"`
 }
 
+var ctx = log.WithFields(log.Fields{
+	"file": "something.png",
+	"type": "image/png",
+	"user": "tobi",
+})
+
 // runCmd represents the run command
 var runCmd = &cobra.Command{
 	Use:   "run",
@@ -38,12 +44,6 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var data Stuff
-
-		ctx := log.WithFields(log.Fields{
-			"file": "something.png",
-			"type": "image/png",
-			"user": "tobi",
-		})
 
 		server := os.Getenv("SERVER")
 		if server == "" {
@@ -113,12 +113,6 @@ func init() {
 
 // ip
 func getInstanceIp(client *imds.Client) (string, error) {
-	ctx := log.WithFields(log.Fields{
-		"file": "something.png",
-		"type": "image/png",
-		"user": "tobi",
-	})
-
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 	ipRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: "public-ipv4",
@@ -138,13 +132,6 @@ func getInstanceIp(client *imds.Client) (string, error) {
 
 // region
 func getInstanceRegion(client *imds.Client) (string, error) {
-
-	ctx := log.WithFields(log.Fields{
-		"file": "something.png",
-		"type": "image/png",
-		"user": "tobi",
-	})
-
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 	region, err := client.GetRegion(context.TODO(), &imds.GetRegionInput{})
 	if err != nil {
@@ -157,13 +144,6 @@ func getInstanceRegion(client *imds.Client) (string, error) {
 // instance-id
 func getInstanceId(client *imds.Client) (string, error) {
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
-
-	ctx := log.WithFields(log.Fields{
-		"file": "something.png",
-		"type": "image/png",
-		"user": "tobi",
-	})
-
 	instanceIdRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: "instance-id",
 	})
@@ -181,12 +161,6 @@ func getInstanceId(client *imds.Client) (string, error) {
 }
 
 func getAWSMetadata(data *Stuff) {
-	ctx := log.WithFields(log.Fields{
-		"file": "something.png",
-		"type": "image/png",
-		"user": "tobi",
-	})
-
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		ctx.Errorf("unable to load config: %w", err)
