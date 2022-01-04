@@ -5,6 +5,8 @@ import (
 
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 
+	"errors"
+
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -14,13 +16,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/apex/log"
 )
 
 type Stuff struct {
-	Ip         string
-	Region     string
-	InstanceId string
+	Ip         string `json:"ip"`
+	Region     string `json:"region"`
+	InstanceId string `json:"instance_id"`
 }
 
 // runCmd represents the run command
@@ -37,19 +39,25 @@ to quickly create a Cobra application.`,
 
 		var data Stuff
 
+		ctx := log.WithFields(log.Fields{
+			"file": "something.png",
+			"type": "image/png",
+			"user": "tobi",
+		})
+
 		server := os.Getenv("SERVER")
 		if server == "" {
-			log.WithFields(log.Fields{"animal": "walrus",}).Error("missing SERVER")
+			ctx.WithError(errors.New("missing SERVER")).Error("missing SERVER")
 		}
 
 		username := os.Getenv("USERNAME")
 		if username == "" {
-			log.WithFields(log.Fields{"animal": "walrus",}).Error("missing USERNAME")
+			ctx.WithError(errors.New("missing USERNAME")).Error("missing USERNAME")
 		}
 
 		password := os.Getenv("PASSWORD")
 		if password == "" {
-			log.WithFields(log.Fields{"animal": "walrus",}).Error("missing PASSWORD")
+			ctx.WithError(errors.New("missing PASSWORD")).Error("missing PASSWORD")
 		}
 
 		if server == "" || password == "" || server == "" {
@@ -74,7 +82,8 @@ to quickly create a Cobra application.`,
 
 		b, err := json.Marshal(data)
 		if err != nil {
-			log.Println("error:", err)
+			ctx.Errorf(err.Error())
+
 		}
 		js := string(b)
 
@@ -104,28 +113,42 @@ func init() {
 
 // ip
 func getInstanceIp(client *imds.Client) (string, error) {
+
+	ctx := log.WithFields(log.Fields{
+		"file": "something.png",
+		"type": "image/png",
+		"user": "tobi",
+	})
+
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 	ipRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: "public-ipv4",
 	})
 	if err != nil {
-		log.Fatal("unable to retrieve the ip from the EC2 instance: %w", err)
+		ctx.Errorf("unable to retrieve the ip from the EC2 instance: %w", err)
 	}
 
 	defer ipRes.Content.Close()
 	ip, err := io.ReadAll(ipRes.Content)
 	if err != nil {
-		log.Fatal("cannot read ip from the EC2 instance: %w", err)
+		ctx.Errorf("cannot read ip from the EC2 instance: %w", err)
 	}
 	return string(ip), nil
 }
 
 // region
 func getInstanceRegion(client *imds.Client) (string, error) {
+
+	ctx := log.WithFields(log.Fields{
+		"file": "something.png",
+		"type": "image/png",
+		"user": "tobi",
+	})
+
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 	region, err := client.GetRegion(context.TODO(), &imds.GetRegionInput{})
 	if err != nil {
-		log.Printf("Unable to retrieve the region from the EC2 instance %v\n", err)
+		ctx.Errorf("Unable to retrieve the region from the EC2 instance %v\n", err)
 	}
 	return string(region.Region), nil
 }
@@ -134,25 +157,38 @@ func getInstanceRegion(client *imds.Client) (string, error) {
 func getInstanceId(client *imds.Client) (string, error) {
 	// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-data-retrieval.html
 
+	ctx := log.WithFields(log.Fields{
+		"file": "something.png",
+		"type": "image/png",
+		"user": "tobi",
+	})
+
 	instanceIdRes, err := client.GetMetadata(context.TODO(), &imds.GetMetadataInput{
 		Path: "instance-id",
 	})
 	if err != nil {
-		log.Fatal("unable to retrieve the instanceId from the EC2 instance: %w", err)
+		ctx.Errorf("unable to retrieve the instanceId from the EC2 instance: %w", err)
+		os.Exit(1)
 	}
 
 	defer instanceIdRes.Content.Close()
 	instanceId, err := io.ReadAll(instanceIdRes.Content)
 	if err != nil {
-		log.Fatal("cannot read instanceId from the EC2 instance: %w", err)
+		ctx.Errorf("cannot read instanceId from the EC2 instance: %w", err)
 	}
 	return string(instanceId), nil
 }
 
 func getAWSMetadata(data *Stuff) {
+	ctx := log.WithFields(log.Fields{
+		"file": "something.png",
+		"type": "image/png",
+		"user": "tobi",
+	})
+
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		log.Fatal("unable to load config: %w", err)
+		ctx.Errorf("unable to load config: %w", err)
 	}
 
 	client := imds.NewFromConfig(cfg)
