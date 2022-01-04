@@ -113,7 +113,6 @@ func init() {
 
 // ip
 func getInstanceIp(client *imds.Client) (string, error) {
-
 	ctx := log.WithFields(log.Fields{
 		"file": "something.png",
 		"type": "image/png",
@@ -126,6 +125,7 @@ func getInstanceIp(client *imds.Client) (string, error) {
 	})
 	if err != nil {
 		ctx.Errorf("unable to retrieve the ip from the EC2 instance: %w", err)
+		os.Exit(1)
 	}
 
 	defer ipRes.Content.Close()
@@ -149,6 +149,7 @@ func getInstanceRegion(client *imds.Client) (string, error) {
 	region, err := client.GetRegion(context.TODO(), &imds.GetRegionInput{})
 	if err != nil {
 		ctx.Errorf("Unable to retrieve the region from the EC2 instance %v\n", err)
+		os.Exit(1)
 	}
 	return string(region.Region), nil
 }
