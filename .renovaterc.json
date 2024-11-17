@@ -3,14 +3,8 @@
   "extends": ["config:best-practices", ":dependencyDashboard"],
   "packageRules": [
     {
-      "enabled": true,
-      "matchDepTypes": ["indirect"],
-      "matchManagers": ["gomod"]
-    },
-    {
       "automerge": true,
       "automergeStrategy": "merge-commit",
-      "automergeType": "branch",
       "ignoreTests": true,
       "matchDepTypes": ["*"],
       "recreateWhen": "always"
