@@ -11,7 +11,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v1.9.1
-	github.com/spf13/viper v1.20.0
+	github.com/spf13/viper v1.20.1
 )
 
 require (
