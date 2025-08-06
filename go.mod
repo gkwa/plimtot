@@ -2,7 +2,7 @@ module github.com/TaylorMonacelli/plimtot
 
 go 1.22.0
 
-toolchain go1.24.5
+toolchain go1.24.6
 
 require (
 	github.com/apex/log v1.9.0
