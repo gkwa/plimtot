@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.15
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 )
 
